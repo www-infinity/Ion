@@ -261,15 +261,18 @@ export default function StatesPage() {
 
           <div className="flex flex-wrap gap-4">
             {ORBITAL_CONFIGS[selectedOrbit].config.map((sub) => {
-              const maxEl = sub.sublevel.includes("s") ? 2 : sub.sublevel.includes("p") ? 6 : sub.sublevel.includes("d") ? 10 : 14;
+              const maxElectronMap: Record<string, number> = { s: 2, p: 6, d: 10, f: 14 };
+              const sublevelType = ["s", "p", "d", "f"].find((t) => sub.sublevel.includes(t)) ?? "s";
+              const maxEl = maxElectronMap[sublevelType] ?? 2;
               const orbitals = maxEl / 2;
               const electronPairs: Array<{ up: boolean; down: boolean }> = [];
               let remaining = sub.electrons;
+              // Hund's rule: fill all orbitals singly before pairing
+              const singleFill = Math.min(remaining, orbitals);
+              const paired = Math.max(0, remaining - orbitals);
               for (let i = 0; i < orbitals; i++) {
-                const up = remaining > 0;
-                const down = remaining > orbitals - i;
-                if (up) remaining--;
-                if (down) remaining--;
+                const up = i < singleFill;
+                const down = i < paired;
                 electronPairs.push({ up, down });
               }
               return (
